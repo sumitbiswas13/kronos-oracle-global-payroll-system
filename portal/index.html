@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlobalPay — Employee Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --surface: #171717;
+  --surface2: #1f1f1f;
+  --surface3: #2a2a2a;
+  --border: #2e2e2e;
+  --border2: #3a3a3a;
+  --text: #f0ede8;
+  --muted: #888;
+  --hint: #555;
+  --accent: #e8622a;
+  --accent2: #f59e0b;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --purple: #a78bfa;
+  --red: #ef4444;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; }
+
+/* ── Auth Screen ── */
+#auth-screen {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:var(--bg);
+}
+.auth-card {
+  width:420px; background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden;
+}
+.auth-header {
+  background:var(--surface2); padding:32px; border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.auth-logo { font-family:var(--font-display); font-size:28px; font-weight:800; color:var(--text); letter-spacing:-1px; }
+.auth-logo span { color:var(--accent); }
+.auth-tagline { font-size:13px; color:var(--muted); margin-top:6px; }
+.auth-body { padding:32px; }
+.auth-body h2 { font-family:var(--font-display); font-size:20px; font-weight:600; margin-bottom:24px; }
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px; text-transform:uppercase; }
+.field input {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;
+  font-family:var(--font-body); outline:none; transition:border-color 0.2s;
+}
+.field input:focus { border-color:var(--accent); }
+.btn-primary {
+  width:100%; background:var(--accent); color:#fff; border:none; border-radius:8px;
+  padding:12px; font-size:14px; font-weight:500; cursor:pointer; font-family:var(--font-body);
+  transition:opacity 0.2s; margin-top:8px;
+}
+.btn-primary:hover { opacity:0.85; }
+.demo-accounts { margin-top:24px; border-top:1px solid var(--border); padding-top:20px; }
+.demo-accounts p { font-size:11px; color:var(--hint); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+.demo-btn {
+  display:block; width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:6px; padding:8px 12px; color:var(--text); font-size:12px; font-family:var(--font-mono);
+  cursor:pointer; text-align:left; margin-bottom:6px; transition:background 0.15s;
+}
+.demo-btn:hover { background:var(--surface3); }
+.demo-btn .role-badge {
+  float:right; font-size:10px; padding:2px 6px; border-radius:4px; font-family:var(--font-body);
+}
+.badge-admin { background:rgba(232,98,42,0.15); color:var(--accent); }
+.badge-manager { background:rgba(59,130,246,0.15); color:var(--blue); }
+.badge-employee { background:rgba(34,197,94,0.15); color:var(--green); }
+
+/* ── App Shell ── */
+#app { display:none; min-height:100vh; }
+
+/* Sidebar */
+.sidebar {
+  position:fixed; top:0; left:0; width:240px; height:100vh;
+  background:var(--surface); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; z-index:100;
+}
+.sidebar-logo {
+  padding:24px 20px; border-bottom:1px solid var(--border);
+  font-family:var(--font-display); font-size:20px; font-weight:800; letter-spacing:-0.5px;
+}
+.sidebar-logo span { color:var(--accent); }
+.sidebar-user {
+  padding:16px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px;
+}
+.user-avatar {
+  width:36px; height:36px; border-radius:50%; background:var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:13px; font-weight:700; color:#fff; flex-shrink:0;
+}
+.user-info .name { font-size:13px; font-weight:500; }
+.user-info .role { font-size:11px; color:var(--muted); margin-top:2px; }
+nav { flex:1; padding:12px 0; overflow-y:auto; }
+.nav-item {
+  display:flex; align-items:center; gap:12px; padding:10px 20px;
+  color:var(--muted); font-size:13px; cursor:pointer; transition:all 0.15s;
+  border-left:3px solid transparent; text-decoration:none;
+}
+.nav-item:hover { color:var(--text); background:var(--surface2); }
+.nav-item.active { color:var(--text); background:var(--surface2); border-left-color:var(--accent); }
+.nav-icon { width:16px; height:16px; opacity:0.7; }
+.nav-section { padding:16px 20px 6px; font-size:10px; color:var(--hint); text-transform:uppercase; letter-spacing:1px; }
+.sidebar-footer { padding:16px 20px; border-top:1px solid var(--border); }
+.logout-btn {
+  display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px;
+  cursor:pointer; transition:color 0.15s; background:none; border:none; font-family:var(--font-body);
+  width:100%;
+}
+.logout-btn:hover { color:var(--red); }
+
+/* Main content */
+.main { margin-left:240px; min-height:100vh; }
+.page { display:none; padding:32px; }
+.page.active { display:block; }
+.page-header { margin-bottom:28px; }
+.page-header h1 { font-family:var(--font-display); font-size:26px; font-weight:700; letter-spacing:-0.5px; }
+.page-header p { color:var(--muted); font-size:14px; margin-top:4px; }
+
+/* Cards */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:24px;
+}
+.card-sm { padding:16px 20px; }
+
+/* Stats grid */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+.stat-value { font-family:var(--font-display); font-size:26px; font-weight:700; letter-spacing:-1px; }
+.stat-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+.stat-accent { border-top:2px solid var(--accent); }
+.stat-green  { border-top:2px solid var(--green); }
+.stat-blue   { border-top:2px solid var(--blue); }
+.stat-purple { border-top:2px solid var(--purple); }
+
+/* Table */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead tr { border-bottom:1px solid var(--border); }
+thead th { padding:10px 14px; text-align:left; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:500; }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+tbody tr:hover { background:var(--surface2); }
+tbody td { padding:12px 14px; }
+tbody tr:last-child { border-bottom:none; }
+
+/* Badges */
+.badge { display:inline-block; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500; }
+.badge-fulltime  { background:rgba(232,98,42,0.12); color:var(--accent); }
+.badge-hourly    { background:rgba(59,130,246,0.12); color:var(--blue); }
+.badge-parttime  { background:rgba(167,139,250,0.12); color:var(--purple); }
+.badge-contract  { background:rgba(245,158,11,0.12); color:var(--accent2); }
+.badge-approved  { background:rgba(34,197,94,0.12); color:var(--green); }
+.badge-pending   { background:rgba(245,158,11,0.12); color:var(--accent2); }
+.badge-rejected  { background:rgba(239,68,68,0.12); color:var(--red); }
+
+/* Payslip detail */
+.payslip-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.payslip-section h3 { font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; font-weight:600; }
+.payslip-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.payslip-row:last-child { border-bottom:none; }
+.payslip-row .label { color:var(--muted); }
+.payslip-row .amount { font-family:var(--font-mono); }
+.net-pay-box {
+  background:var(--surface2); border:1px solid var(--border2); border-radius:10px;
+  padding:20px 24px; display:flex; justify-content:space-between; align-items:center;
+  border-top:2px solid var(--accent);
+}
+.net-pay-box .label { font-size:13px; color:var(--muted); }
+.net-pay-box .amount { font-family:var(--font-display); font-size:28px; font-weight:700; color:var(--green); letter-spacing:-1px; }
+
+/* Leave */
+.leave-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.leave-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.leave-type { font-size:13px; font-weight:500; margin-bottom:12px; }
+.leave-bar { height:6px; background:var(--surface3); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.leave-fill { height:100%; border-radius:3px; background:var(--accent); }
+.leave-numbers { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+
+/* Form */
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+.form-group input, .form-group select, .form-group textarea {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;
+  font-family:var(--font-body); outline:none; transition:border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus { border-color:var(--accent); }
+.form-group textarea { min-height:80px; resize:vertical; }
+.btn-secondary {
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:8px; padding:10px 20px; font-size:13px; cursor:pointer;
+  font-family:var(--font-body); transition:background 0.15s; margin-right:8px;
+}
+.btn-secondary:hover { background:var(--surface3); }
+.btn-submit {
+  background:var(--accent); border:none; color:#fff; border-radius:8px;
+  padding:10px 24px; font-size:13px; cursor:pointer; font-family:var(--font-body);
+  transition:opacity 0.2s;
+}
+.btn-submit:hover { opacity:0.85; }
+
+/* Period selector */
+.period-selector { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.period-selector select {
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:8px; padding:8px 12px; font-size:13px; font-family:var(--font-body); outline:none;
+}
+.period-label { font-size:13px; color:var(--muted); }
+
+/* Admin run payroll */
+.run-payroll-card { border-top:2px solid var(--accent); }
+.run-btn {
+  background:var(--accent); border:none; color:#fff; border-radius:8px;
+  padding:12px 28px; font-size:14px; font-weight:500; cursor:pointer;
+  font-family:var(--font-body); transition:opacity 0.2s; margin-top:16px;
+}
+.run-btn:hover { opacity:0.85; }
+.run-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:24px; right:24px; background:var(--surface2);
+  border:1px solid var(--border); border-left:3px solid var(--green);
+  border-radius:8px; padding:14px 20px; font-size:13px; z-index:9999;
+  transform:translateY(80px); opacity:0; transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.error { border-left-color:var(--red); }
+
+/* Sections divider */
+.section-title { font-family:var(--font-display); font-size:16px; font-weight:600; margin-bottom:16px; }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+/* Country flag emoji */
+.flag { font-size:16px; margin-right:6px; }
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">Global<span>Pay</span></div>
+      <div class="auth-tagline">Kronos + Oracle — Global Payroll System</div>
+    </div>
+    <div class="auth-body">
+      <h2>Sign in to your account</h2>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••">
+      </div>
+      <button class="btn-primary" onclick="login()">Sign in</button>
+      <div class="demo-accounts">
+        <p>Demo accounts</p>
+        <button class="demo-btn" onclick="fillDemo('admin@acme.com','admin123')">
+          admin@acme.com <span class="role-badge badge-admin">ADMIN</span>
+        </button>
+        <button class="demo-btn" onclick="fillDemo('manager@acme.com','manager123')">
+          manager@acme.com <span class="role-badge badge-manager">MANAGER</span>
+        </button>
+        <button class="demo-btn" onclick="fillDemo('jcarter@acme.com','emp123')">
+          jcarter@acme.com <span class="role-badge badge-employee">EMPLOYEE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Global<span>Pay</span></div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar">JC</div>
+      <div class="user-info">
+        <div class="name" id="user-name">James Carter</div>
+        <div class="role" id="user-role">Employee</div>
+      </div>
+    </div>
+    <nav id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Sign out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Pages -->
+  <main class="main">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1 id="dash-greeting">Good evening</h1>
+        <p id="dash-subtitle">Here's your payroll overview</p>
+      </div>
+      <div class="stats-grid" id="dash-stats"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title">Latest payslip</div>
+          <div id="dash-latest-payslip"></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Leave balances</div>
+          <div id="dash-leave"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payslips -->
+    <div class="page" id="page-payslips">
+      <div class="page-header">
+        <h1>My payslips</h1>
+        <p>View and download your payslip history</p>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="period-selector">
+          <span class="period-label">Pay period:</span>
+          <select id="payslip-period" onchange="loadPayslip()">
+            <option value="2024-11">November 2024</option>
+            <option value="2024-10">October 2024</option>
+            <option value="2024-09">September 2024</option>
+          </select>
+        </div>
+        <div id="payslip-detail"></div>
+      </div>
+    </div>
+
+    <!-- Leave -->
+    <div class="page" id="page-leave">
+      <div class="page-header">
+        <h1>Leave management</h1>
+        <p>View balances and request time off</p>
+      </div>
+      <div class="leave-grid" id="leave-balances"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title">Request leave</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Leave type</label>
+              <select id="leave-type">
+                <option value="ANNUAL">Annual leave</option>
+                <option value="SICK">Sick leave</option>
+                <option value="BEREAVEMENT">Bereavement leave</option>
+                <option value="UNPAID">Unpaid leave</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Days requested</label>
+              <input type="number" id="leave-days" value="1" min="1" max="30">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start date</label>
+              <input type="date" id="leave-start">
+            </div>
+            <div class="form-group">
+              <label>End date</label>
+              <input type="date" id="leave-end">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea id="leave-notes" placeholder="Any additional information..."></textarea>
+          </div>
+          <button class="btn-secondary">Cancel</button>
+          <button class="btn-submit" onclick="submitLeave()">Submit request</button>
+        </div>
+        <div class="card">
+          <div class="section-title">Recent requests</div>
+          <div id="leave-requests"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employees (admin/manager) -->
+    <div class="page" id="page-employees">
+      <div class="page-header">
+        <h1>Employees</h1>
+        <p>All employees across all offices</p>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th><th>Type</th><th>Country</th>
+                <th>Currency</th><th>Compensation</th><th>Kronos ID</th>
+              </tr>
+            </thead>
+            <tbody id="employees-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin: Run Payroll -->
+    <div class="page" id="page-run-payroll">
+      <div class="page-header">
+        <h1>Run payroll</h1>
+        <p>Trigger a payroll calculation run for any office</p>
+      </div>
+      <div class="grid-2">
+        <div class="card run-payroll-card">
+          <div class="section-title">Configure run</div>
+          <div class="form-group">
+            <label>Pay period start</label>
+            <input type="date" id="run-start" value="2024-11-01">
+          </div>
+          <div class="form-group">
+            <label>Pay period end</label>
+            <input type="date" id="run-end" value="2024-11-30">
+          </div>
+          <div class="form-group">
+            <label>Country filter (optional)</label>
+            <select id="run-country">
+              <option value="">All countries</option>
+              <option value="US">🇺🇸 United States</option>
+              <option value="GB">🇬🇧 United Kingdom</option>
+              <option value="IN">🇮🇳 India</option>
+              <option value="AU">🇦🇺 Australia</option>
+            </select>
+          </div>
+          <button class="run-btn" id="run-btn" onclick="runPayroll()">Run payroll</button>
+        </div>
+        <div class="card" id="run-results" style="display:none">
+          <div class="section-title">Run results</div>
+          <div id="run-results-body"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Mock data ─────────────────────────────────────────────────
+const USERS = {
+  'admin@acme.com':   {password:'admin123',  role:'ADMIN',    name:'Admin User',    initials:'AU', employee_id:null},
+  'manager@acme.com': {password:'manager123',role:'MANAGER',  name:'Jane Manager',  initials:'JM', employee_id:null},
+  'jcarter@acme.com': {password:'emp123',    role:'EMPLOYEE', name:'James Carter',  initials:'JC', employee_id:1},
+  'psharma@acme.com': {password:'emp123',    role:'EMPLOYEE', name:'Priya Sharma',  initials:'PS', employee_id:2},
+};
+
+const EMPLOYEES = [
+  {id:1,  name:'James Carter',   type:'FULLTIME',  country:'US', flag:'🇺🇸', currency:'USD', comp:'$95,000/yr',    kronos:'KRN001'},
+  {id:2,  name:'Priya Sharma',   type:'FULLTIME',  country:'IN', flag:'🇮🇳', currency:'INR', comp:'₹18,00,000/yr', kronos:'KRN002'},
+  {id:3,  name:'Oliver Bennett', type:'FULLTIME',  country:'GB', flag:'🇬🇧', currency:'GBP', comp:'£65,000/yr',    kronos:'KRN003'},
+  {id:4,  name:'Chloe Thompson', type:'FULLTIME',  country:'AU', flag:'🇦🇺', currency:'AUD', comp:'A$95,000/yr',   kronos:'KRN004'},
+  {id:5,  name:'Marcus Williams',type:'HOURLY',    country:'US', flag:'🇺🇸', currency:'USD', comp:'$28.00/hr',     kronos:'KRN005'},
+  {id:6,  name:'Aisha Patel',    type:'HOURLY',    country:'IN', flag:'🇮🇳', currency:'INR', comp:'₹450/hr',       kronos:'KRN006'},
+  {id:7,  name:'Emma Wilson',    type:'PARTTIME',  country:'GB', flag:'🇬🇧', currency:'GBP', comp:'£18.00/hr',     kronos:'KRN007'},
+  {id:8,  name:'Liam Johnson',   type:'HOURLY',    country:'AU', flag:'🇦🇺', currency:'AUD', comp:'A$35.00/hr',    kronos:'KRN008'},
+  {id:9,  name:'Sofia Martinez', type:'FULLTIME',  country:'US', flag:'🇺🇸', currency:'USD', comp:'$110,000/yr',   kronos:'KRN009'},
+  {id:10, name:'Raj Kumar',      type:'CONTRACT',  country:'IN', flag:'🇮🇳', currency:'INR', comp:'₹24,00,000/yr', kronos:'KRN010'},
+];
+
+const PAYSLIPS = {
+  1: {
+    '2024-11': {gross:3653.85, pretax:469.23, taxable:3184.62, tax:545.28, posttax:0, net:2639.34, currency:'USD',
+      earnings:[{d:'Base salary',amount:3653.85}],
+      pretaxDeds:[{d:'401(k) 6%',amount:219.23},{d:'Health Insurance',amount:250.00}],
+      taxes:[{d:'Federal 22%',amount:301.65},{d:'FICA Social Security',amount:197.45},{d:'Medicare',amount:46.18}],
+      hours:{reg:167.8, ot:0}},
+    '2024-10': {gross:3653.85, pretax:469.23, taxable:3184.62, tax:534.10, posttax:0, net:2650.52, currency:'USD',
+      earnings:[{d:'Base salary',amount:3653.85}],
+      pretaxDeds:[{d:'401(k) 6%',amount:219.23},{d:'Health Insurance',amount:250.00}],
+      taxes:[{d:'Federal 22%',amount:291.00},{d:'FICA Social Security',amount:197.45},{d:'Medicare',amount:45.65}],
+      hours:{reg:160.0, ot:0}},
+  }
+};
+
+const LEAVE_BALANCES = [
+  {type:'Annual leave',    entitled:20, taken:5,  pending:2, color:'#e8622a'},
+  {type:'Sick leave',      entitled:10, taken:1,  pending:0, color:'#3b82f6'},
+  {type:'Bereavement',     entitled:5,  taken:0,  pending:0, color:'#a78bfa'},
+];
+
+const LEAVE_REQUESTS = [
+  {type:'Annual leave', start:'2024-12-23', end:'2024-12-27', days:3, status:'APPROVED'},
+  {type:'Annual leave', start:'2024-11-08', end:'2024-11-08', days:1, status:'APPROVED'},
+  {type:'Sick leave',   start:'2024-10-15', end:'2024-10-15', days:1, status:'APPROVED'},
+];
+
+// ── State ─────────────────────────────────────────────────────
+let currentUser = null;
+
+// ── Auth ──────────────────────────────────────────────────────
+function fillDemo(email, pass) {
+  document.getElementById('login-email').value = email;
+  document.getElementById('login-password').value = pass;
+}
+
+function login() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('login-password').value;
+  const user  = USERS[email];
+  if (!user || user.password !== pass) { showToast('Invalid email or password', true); return; }
+  currentUser = { ...user, email };
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── App init ──────────────────────────────────────────────────
+function initApp() {
+  document.getElementById('user-avatar').textContent = currentUser.initials;
+  document.getElementById('user-name').textContent   = currentUser.name;
+  document.getElementById('user-role').textContent   = currentUser.role.charAt(0) + currentUser.role.slice(1).toLowerCase();
+
+  const nav = document.getElementById('sidebar-nav');
+  const items = [
+    {id:'dashboard',    icon:'grid',      label:'Dashboard',    roles:['ADMIN','MANAGER','EMPLOYEE']},
+    {id:'payslips',     icon:'file',      label:'My payslips',  roles:['EMPLOYEE']},
+    {id:'leave',        icon:'calendar',  label:'Leave',        roles:['EMPLOYEE']},
+    {id:'employees',    icon:'users',     label:'Employees',    roles:['ADMIN','MANAGER']},
+    {id:'run-payroll',  icon:'play',      label:'Run payroll',  roles:['ADMIN']},
+  ];
+
+  const icons = {
+    grid:     '<path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/>',
+    file:     '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    users:    '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+    play:     '<polygon points="5 3 19 12 5 21 5 3"/>',
+  };
+
+  nav.innerHTML = items
+    .filter(i => i.roles.includes(currentUser.role))
+    .map(i => `
+      <div class="nav-item" onclick="showPage('${i.id}')" id="nav-${i.id}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">${icons[i.icon]}</svg>
+        ${i.label}
+      </div>`).join('');
+
+  showPage('dashboard');
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id)?.classList.add('active');
+  document.getElementById('nav-' + id)?.classList.add('active');
+
+  if (id === 'dashboard')   renderDashboard();
+  if (id === 'payslips')    loadPayslip();
+  if (id === 'leave')       renderLeave();
+  if (id === 'employees')   renderEmployees();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+function renderDashboard() {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-greeting').textContent = `${greeting}, ${currentUser.name.split(' ')[0]}`;
+
+  if (currentUser.role === 'EMPLOYEE') {
+    const ps = PAYSLIPS[1]?.['2024-11'];
+    document.getElementById('dash-stats').innerHTML = `
+      <div class="stat-card stat-accent"><div class="stat-label">Net pay (Nov)</div><div class="stat-value">${ps ? '$'+ps.net.toLocaleString('en',{minimumFractionDigits:2}) : '—'}</div><div class="stat-sub">USD · Biweekly</div></div>
+      <div class="stat-card stat-green"><div class="stat-label">Annual leave left</div><div class="stat-value">13</div><div class="stat-sub">days remaining</div></div>
+      <div class="stat-card stat-blue"><div class="stat-label">Hours this month</div><div class="stat-value">167.8</div><div class="stat-sub">Regular hours</div></div>
+      <div class="stat-card stat-purple"><div class="stat-label">YTD earnings</div><div class="stat-value">$38.4k</div><div class="stat-sub">Jan–Nov 2024</div></div>`;
+
+    if (ps) {
+      document.getElementById('dash-latest-payslip').innerHTML = `
+        <div class="payslip-row"><span class="label">Period</span><span>Nov 1–30, 2024</span></div>
+        <div class="payslip-row"><span class="label">Gross pay</span><span class="amount">USD ${ps.gross.toLocaleString('en',{minimumFractionDigits:2})}</span></div>
+        <div class="payslip-row"><span class="label">Total tax</span><span class="amount">USD ${ps.tax.toLocaleString('en',{minimumFractionDigits:2})}</span></div>
+        <div class="payslip-row"><span class="label">Deductions</span><span class="amount">USD ${ps.pretax.toLocaleString('en',{minimumFractionDigits:2})}</span></div>
+        <div style="margin-top:16px" class="payslip-row"><span class="label" style="font-weight:500;color:var(--text)">Net pay</span><span class="amount" style="color:var(--green);font-weight:600">USD ${ps.net.toLocaleString('en',{minimumFractionDigits:2})}</span></div>`;
+    }
+    document.getElementById('dash-leave').innerHTML = LEAVE_BALANCES.map(b => {
+      const pct = ((b.entitled - b.taken - b.pending) / b.entitled * 100).toFixed(0);
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${b.type}</span><span style="color:var(--muted)">${b.entitled-b.taken-b.pending}/${b.entitled} days</span></div>
+        <div class="leave-bar"><div class="leave-fill" style="width:${pct}%;background:${b.color}"></div></div>
+      </div>`;
+    }).join('');
+
+  } else {
+    document.getElementById('dash-stats').innerHTML = `
+      <div class="stat-card stat-accent"><div class="stat-label">Total employees</div><div class="stat-value">10</div><div class="stat-sub">across 4 countries</div></div>
+      <div class="stat-card stat-green"><div class="stat-label">Last payroll run</div><div class="stat-value">Nov 30</div><div class="stat-sub">All complete</div></div>
+      <div class="stat-card stat-blue"><div class="stat-label">Pending leaves</div><div class="stat-value">2</div><div class="stat-sub">awaiting approval</div></div>
+      <div class="stat-card stat-purple"><div class="stat-label">Countries active</div><div class="stat-value">4</div><div class="stat-sub">US · GB · IN · AU</div></div>`;
+    document.getElementById('dash-latest-payslip').innerHTML = `
+      <div class="payslip-row"><span class="label">US payroll</span><span class="amount">USD 158,423.00</span></div>
+      <div class="payslip-row"><span class="label">UK payroll</span><span class="amount">GBP 48,291.00</span></div>
+      <div class="payslip-row"><span class="label">India payroll</span><span class="amount">INR 3,24,560.00</span></div>
+      <div class="payslip-row"><span class="label">Australia payroll</span><span class="amount">AUD 72,841.00</span></div>`;
+    document.getElementById('dash-leave').innerHTML = `
+      <div class="payslip-row"><span class="label">Pending approvals</span><span>2 requests</span></div>
+      <div class="payslip-row"><span class="label">Approved this month</span><span>5 requests</span></div>
+      <div class="payslip-row"><span class="label">Most used type</span><span>Annual leave</span></div>`;
+  }
+}
+
+// ── Payslips ──────────────────────────────────────────────────
+function loadPayslip() {
+  const period  = document.getElementById('payslip-period')?.value || '2024-11';
+  const empId   = currentUser.employee_id || 1;
+  const ps      = PAYSLIPS[empId]?.[period];
+  const el      = document.getElementById('payslip-detail');
+  if (!el) return;
+  if (!ps) { el.innerHTML = '<p style="color:var(--muted);font-size:13px">No payslip found for this period.</p>'; return; }
+
+  el.innerHTML = `
+    <div class="payslip-grid">
+      <div class="payslip-section">
+        <h3>Earnings</h3>
+        ${ps.earnings.map(e=>`<div class="payslip-row"><span class="label">${e.d}</span><span class="amount">${ps.currency} ${e.amount.toLocaleString('en',{minimumFractionDigits:2})}</span></div>`).join('')}
+        <div class="payslip-row" style="font-weight:500"><span class="label" style="color:var(--text)">Gross pay</span><span class="amount">${ps.currency} ${ps.gross.toLocaleString('en',{minimumFractionDigits:2})}</span></div>
+      </div>
+      <div class="payslip-section">
+        <h3>Pre-tax deductions</h3>
+        ${ps.pretaxDeds.map(d=>`<div class="payslip-row"><span class="label">${d.d}</span><span class="amount">− ${ps.currency} ${d.amount.toLocaleString('en',{minimumFractionDigits:2})}</span></div>`).join('')}
+        <div class="payslip-row"><span class="label">Taxable income</span><span class="amount">${ps.currency} ${ps.taxable.toLocaleString('en',{minimumFractionDigits:2})}</span></div>
+      </div>
+    </div>
+    <div class="payslip-section" style="margin-bottom:16px">
+      <h3>Taxes</h3>
+      ${ps.taxes.map(t=>`<div class="payslip-row"><span class="label">${t.d}</span><span class="amount">− ${ps.currency} ${t.amount.toLocaleString('en',{minimumFractionDigits:2})}</span></div>`).join('')}
+      <div class="payslip-row"><span class="label">Total tax</span><span class="amount">− ${ps.currency} ${ps.tax.toLocaleString('en',{minimumFractionDigits:2})}</span></div>
+    </div>
+    <div class="net-pay-box">
+      <div><div class="label">Net pay</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Reg ${ps.hours.reg}h · OT ${ps.hours.ot}h</div></div>
+      <div class="amount">${ps.currency} ${ps.net.toLocaleString('en',{minimumFractionDigits:2})}</div>
+    </div>`;
+}
+
+// ── Leave ─────────────────────────────────────────────────────
+function renderLeave() {
+  document.getElementById('leave-balances').innerHTML = LEAVE_BALANCES.map(b => {
+    const rem = b.entitled - b.taken - b.pending;
+    const pct = (rem / b.entitled * 100).toFixed(0);
+    return `<div class="leave-card">
+      <div class="leave-type">${b.type}</div>
+      <div class="leave-bar"><div class="leave-fill" style="width:${pct}%;background:${b.color}"></div></div>
+      <div class="leave-numbers"><span>${rem} remaining</span><span>${b.entitled} total</span></div>
+      ${b.pending > 0 ? `<div style="font-size:11px;color:var(--accent2);margin-top:6px">${b.pending} day(s) pending</div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('leave-requests').innerHTML = LEAVE_REQUESTS.map(r => `
+    <div class="payslip-row">
+      <span><div style="font-size:13px">${r.type}</div><div style="font-size:11px;color:var(--muted)">${r.start} · ${r.days}d</div></span>
+      <span class="badge badge-${r.status.toLowerCase()}">${r.status}</span>
+    </div>`).join('');
+
+  // Set default dates
+  const today = new Date();
+  document.getElementById('leave-start').value = today.toISOString().split('T')[0];
+  document.getElementById('leave-end').value   = today.toISOString().split('T')[0];
+}
+
+function submitLeave() {
+  const type  = document.getElementById('leave-type').value;
+  const days  = document.getElementById('leave-days').value;
+  const start = document.getElementById('leave-start').value;
+  if (!start) { showToast('Please select a start date', true); return; }
+  LEAVE_REQUESTS.unshift({type: type.charAt(0)+type.slice(1).toLowerCase().replace('_',' '), start, end:start, days:parseInt(days), status:'PENDING'});
+  renderLeave();
+  showToast(`Leave request submitted — ${days} day(s) of ${type.toLowerCase().replace('_',' ')}`);
+}
+
+// ── Employees ─────────────────────────────────────────────────
+function renderEmployees() {
+  const typeBadge = t => `<span class="badge badge-${t.toLowerCase()}">${t}</span>`;
+  document.getElementById('employees-table').innerHTML = EMPLOYEES.map(e => `
+    <tr>
+      <td><strong>${e.name}</strong></td>
+      <td>${typeBadge(e.type)}</td>
+      <td>${e.flag} ${e.country}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${e.currency}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${e.comp}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${e.kronos}</td>
+    </tr>`).join('');
+}
+
+// ── Run Payroll ───────────────────────────────────────────────
+function runPayroll() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+
+  setTimeout(() => {
+    const country = document.getElementById('run-country').value;
+    const emps = country ? EMPLOYEES.filter(e => e.country === country) : EMPLOYEES;
+    const results = emps.map(e => ({
+      ...e,
+      gross: e.type === 'FULLTIME' ? (parseFloat(e.comp.replace(/[^0-9.]/g,'')) / 12).toFixed(2) : (parseFloat(e.comp.replace(/[^0-9.]/g,'')) * 160).toFixed(2),
+      net:   e.type === 'FULLTIME' ? (parseFloat(e.comp.replace(/[^0-9.]/g,'')) / 12 * 0.72).toFixed(2) : (parseFloat(e.comp.replace(/[^0-9.]/g,'')) * 160 * 0.75).toFixed(2),
+    }));
+
+    document.getElementById('run-results').style.display = 'block';
+    document.getElementById('run-results-body').innerHTML = `
+      <div class="payslip-row"><span class="label">Status</span><span class="badge badge-approved">Complete</span></div>
+      <div class="payslip-row"><span class="label">Employees processed</span><span>${results.length}</span></div>
+      <div class="payslip-row"><span class="label">Period</span><span>${document.getElementById('run-start').value} → ${document.getElementById('run-end').value}</span></div>
+      <div style="margin-top:16px">
+        ${results.map(r=>`<div class="payslip-row"><span class="label">${r.name}</span><span style="font-family:var(--font-mono);font-size:12px">${r.currency} ${parseFloat(r.net).toLocaleString('en',{minimumFractionDigits:2})}</span></div>`).join('')}
+      </div>`;
+
+    btn.disabled = false;
+    btn.textContent = 'Run payroll';
+    showToast(`Payroll complete — ${results.length} employees processed`);
+  }, 1800);
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, error = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (error ? ' error' : '');
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Enter key on login
+document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+</script>
+</body>
+</html>
